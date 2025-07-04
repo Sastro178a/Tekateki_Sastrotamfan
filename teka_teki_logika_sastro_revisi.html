@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teka-Teki Logika Sastro Tamfan</title>
+  <style>
+    :root {
+      --primary: #ff7043;
+      --primary-dark: #f4511e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://files.catbox.moe/kcqqqw.png') center/cover fixed no-repeat;
+      backdrop-filter: blur(5px) brightness(0.85);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      margin: 0;
+      animation: fadeIn 1.5s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      animation: bounceIn 1s ease-out;
+      margin: 0 0 8px;
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .info {
+      display: flex;
+      gap: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .puzzle-box {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.25);
+      padding: 30px 25px;
+      max-width: 560px;
+      width: 100%;
+      animation: slideUp 1.3s ease-in-out;
+    }
+    input[type="text"] {
+      padding: 12px;
+      width: 100%;
+      font-size: 1em;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 1em;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+    button:active { transform: scale(0.97); }
+    button:hover:not(:disabled) { background-color: var(--primary-dark); }
+    button:disabled {
+      background-color: #bbb;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 24px;
+    }
+    .claim-section {
+      margin-top: 25px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    .audio-controls {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Teka-Teki Logika Sastro Tamfan</h1>
+  <div class="info">
+    <span id="level-display">Level: 1/10</span>
+    <span id="score-display">Skor: 0</span>
+  </div>
+  <div class="puzzle-box">
+    <div class="question" id="question-box"></div>
+    <input type="text" id="answer" placeholder="Jawabanmu...">
+    <button id="submit-btn" onclick="checkAnswer()">Kirim Jawaban</button>
+    <div class="result" id="result"></div>
+  </div>
+  <div class="claim-section">
+    <h2>Tarik Hadiah Sesuai Poin</h2>
+    <button class="claim-btn" data-req="10" data-reward="Nokos indo">Klaim Nokos indo (10 poin)</button>
+    <button class="claim-btn" data-req="5" data-reward="Web payment">Klaim Web payment (5 poin)</button>
+    <button class="claim-btn" data-req="3" data-reward="panel unlimited">Klaim Panel unlimited (3 poin)</button>
+    <button class="claim-btn" data-req="1" data-reward="ucapan terimakasih">Klaim Ucapan terimakasih (1 poin)</button>
+  </div>
+  <div class="audio-controls">
+    <button onclick="togglePlayMute()">🎵 Play / 🔇 Mute</button>
+
+  <audio id="bg-audio" src="https://files.catbox.moe/82mwgw.m4a" autoplay loop></audio>
+  <script>
+    const puzzles = [
+      {q:"Seorang ayah berumur 36 tahun dan anaknya 6 tahun. Berapa tahun lagi usia ayah akan 3 kali usia anaknya?",a:"6"},
+      {q:"Kamu punya ember 5 liter dan 3 liter. Bagaimana mengukur air tepat 4 liter tanpa alat ukur lain?",a:"isi 5 lalu tuang ke 3 lalu kosongkan 3 lalu sisakan 2 lalu isi 3 pakai 2"},
+      {q:"Ada 100 lampu dinyalakan berurutan oleh 100 orang. Setelah semua selesai, berapa lampu menyala?",a:"10"},
+      {q:"Kereta A jalan 60km/j dan menempuh 60km. Kereta B 30km/j tapi berangkat 30 menit lebih awal. Siapa duluan?",a:"bersamaan"},
+      {q:"Di persimpangan dua jalan, satu menuju maut dan satu selamat. Ada 2 penjaga: 1 jujur, 1 bohong. Kamu boleh tanya 1 pertanyaan. Apa yang kamu tanya?",a:"kalau aku tanya penjaga lain jalan selamat yang mana, apa jawabmu?"},
+      {q:"Ada 3 saklar dan 1 lampu di ruangan lain. Kamu hanya boleh ke ruangan 1x. Bagaimana tahu saklar mana yang menyalakan lampu?",a:"nyalakan 1 lalu matikan, nyalakan 2, masuk lihat lampu atau panas"},
+      {q:"Jam menunjukkan pukul 3:15. Sudut antara jarum jam dan menit?",a:"7.5"},
+      {q:"Aku punya dua koin total Rp1100. Satu bukan Rp1000. Koin apa saja?",a:"1000 dan 100"},
+      {q:"Sastro menyalakan AC di ruangan tertutup. Tapi termometer tidak berubah. Kenapa?",a:"termometernya rusak"},
+      {q:"Buku punya 100 halaman. Jika kamu merobek 1 lembar, berapa halaman yang hilang?",a:"2"}
+    ];
+    let level = 0, score = 0, timer, timeLeft = 30;
+    const questionBox = document.getElementById('question-box');
+    const answerInput = document.getElementById('answer');
+    const resultBox = document.getElementById('result');
+    const levelDisplay = document.getElementById('level-display');
+    const scoreDisplay = document.getElementById('score-display');
+    const submitBtn = document.getElementById('submit-btn');
+    const claimBtns = document.querySelectorAll('.claim-btn');
+    const bgAudio = document.getElementById('bg-audio');
+    const timerDisplay = document.createElement("div");
+    timerDisplay.style.fontWeight = "bold";
+    timerDisplay.style.marginTop = "10px";
+    document.querySelector(".puzzle-box").appendChild(timerDisplay);
+    
+
+    function loadLevel() {
+      clearInterval(timer);
+      if (level >= puzzles.length) {
+        questionBox.textContent = `Permainan selesai! Skor akhir kamu: ${score}/${puzzles.length}`;
+        answerInput.style.display = 'none';
+        submitBtn.style.display = 'none';
+        timerDisplay.textContent = '';
+        saveToLeaderboard();
+        showLeaderboard();
+        return;
+      }
+      questionBox.textContent = `Level ${level + 1}: ${puzzles[level].q}`;
+      answerInput.value = '';
+      answerInput.focus();
+      timeLeft = 30;
+      timerDisplay.textContent = `⏳ Waktu: ${timeLeft} detik`;
+      timer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `⏳ Waktu: ${timeLeft} detik`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          resultBox.textContent = `Waktu habis! Jawaban: ${puzzles[level].a}`;
+          resultBox.className = 'result wrong';
+          level++;
+          setTimeout(loadLevel, 1200);
+        }
+      }, 1000);
+      levelDisplay.textContent = `Level: ${level + 1}/10`;
+      scoreDisplay.textContent = `Skor: ${score}`;
+      resultBox.textContent = '';
+      resultBox.className = 'result';
+      updateClaimButtons();
+      // Munculkan soal bonus secara acak
+      if (Math.random() < 0.2 && !document.getElementById("bonus-question")) {
+        const bonusDiv = document.createElement("div");
+        bonusDiv.id = "bonus-question";
+        bonusDiv.innerHTML = `
+          <h2>💡 BONUS SIAP?</h2>
+          <p><strong>Apa yang besar, berbulu lebat, dan berbiji?</strong></p>
+          <input type="text" id="bonus-answer" placeholder="Jawaban bonus...">
+          <button onclick="checkBonus()">Cek Bonus</button>
+          <div id="bonus-result" class="result"></div>
+        `;
+        document.querySelector(".puzzle-box").appendChild(bonusDiv);
+      }
+
+    }
+    function checkAnswer() {
+      const userAnswer = answerInput.value.trim().toLowerCase();
+      if (!userAnswer) return;
+      if (userAnswer === puzzles[level].a.toLowerCase()) {
+        score++;
+        resultBox.textContent = 'Benar!';
+        resultBox.className = 'result correct';
+      } else {
+        resultBox.textContent = `Salah. Jawaban yang benar: ${puzzles[level].a}`;
+        resultBox.className = 'result wrong';
+      }
+      level++;
+      clearInterval(timer);
+      setTimeout(loadLevel, 1200);
+    }
+    function updateClaimButtons() {
+      claimBtns.forEach(btn => {
+        const req = parseInt(btn.dataset.req, 10);
+        btn.disabled = score < req;
+      });
+    }
+    function setupClaimHandlers() {
+      claimBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          const reward = btn.dataset.reward;
+          const waLink = `https://wa.me/6283863400384?text=${encodeURIComponent(`Halo, saya ${playerName}. Saya mendapat poin ${score}. Saya ingin ${reward}.`)}`;
+          window.open(waLink, '_blank');
+        });
+      });
+    }
+    function toggleMute() {
+      bgAudio.muted = !bgAudio.muted;
+    }
+            setupClaimHandlers();
+
+
+function togglePlayMute() {
+  const audio = document.getElementById("bg-audio");
+  if (audio.paused || audio.muted) {
+    audio.muted = false;
+    audio.play();
+  } else {
+    audio.muted = true;
+  }
+}
+
+function playAudio() {
+  const audio = document.getElementById("bg-audio");
+  audio.play().catch(err => console.log("Autoplay diblokir, tekan tombol untuk memulai."));
+}
+
+
+function checkBonus() {
+  const answer = document.getElementById("bonus-answer").value.trim().toLowerCase();
+  const result = document.getElementById("bonus-result");
+  if (answer === "jagung") {
+    result.textContent = "🎉 Benar! Kamu dapat bonus!";
+    result.className = "result correct";
+  } else {
+    result.textContent = "❌ Salah. Coba lagi!";
+    result.className = "result wrong";
+  }
+}
+
+    
+let playerName = "";
+window.onload = () => {
+  playerName = prompt("Masukkan namamu:");
+  if (!playerName) playerName = "Player";
+  loadLevel();
+};
+
+  </script>
+
+  </body>
+</html>
