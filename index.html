@@ -1,102 +1,44 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teka-Teki Logika Sastro Tamfan</title>
   <style>
-    :root {
-      --primary: #ff7043;
-      --primary-dark: #f4511e;
-    }
-    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: url('https://files.catbox.moe/kcqqqw.png') center/cover fixed no-repeat;
       backdrop-filter: blur(5px) brightness(0.85);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 40px 20px;
-      margin: 0;
-      animation: fadeIn 1.5s ease-in;
+      margin: 0; padding: 40px 20px;
+      display: flex; flex-direction: column; align-items: center;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    h1 {
-      color: #fff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      animation: bounceIn 1s ease-out;
-      margin: 0 0 8px;
-    }
-    @keyframes bounceIn {
-      0% { transform: scale(0.5); opacity: 0; }
-      60% { transform: scale(1.2); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-    .info {
-      display: flex;
-      gap: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      color: #fff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    }
+    h1 { color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+    .info { display: flex; gap: 20px; font-weight: bold; color: white; margin-bottom: 15px; }
     .puzzle-box {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       border-radius: 16px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.25);
       padding: 30px 25px;
       max-width: 560px;
       width: 100%;
-      animation: slideUp 1.3s ease-in-out;
+      box-shadow: 0 0 30px rgba(0,0,0,0.25);
     }
     input[type="text"] {
-      padding: 12px;
-      width: 100%;
-      font-size: 1em;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      padding: 12px; width: 100%;
+      font-size: 1em; margin-bottom: 20px;
+      border-radius: 8px; border: 1px solid #ccc;
     }
     button {
       padding: 12px 20px;
       font-size: 1em;
-      background-color: var(--primary);
+      background-color: #ff7043;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
     }
-    button:active { transform: scale(0.97); }
-    button:hover:not(:disabled) { background-color: var(--primary-dark); }
-    button:disabled {
-      background-color: #bbb;
-      cursor: not-allowed;
-    }
-    .result {
-      margin-top: 15px;
-      font-weight: bold;
-      min-height: 24px;
-    }
-    .claim-section {
-      margin-top: 25px;
-      background: rgba(255,255,255,0.85);
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 560px;
-      width: 100%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-    .audio-controls {
-      margin-top: 15px;
-    }
+    button:hover { background-color: #f4511e; }
+    .result { margin-top: 15px; font-weight: bold; min-height: 24px; }
+    .claim-section { margin-top: 25px; background: rgba(255,255,255,0.9); border-radius: 12px; padding: 20px; max-width: 560px; width: 100%; }
+    .audio-controls { margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -115,27 +57,38 @@
     <h2>Tarik Hadiah Sesuai Poin</h2>
     <button class="claim-btn" data-req="10" data-reward="Nokos indo">Klaim Nokos indo (10 poin)</button>
     <button class="claim-btn" data-req="5" data-reward="Web payment">Klaim Web payment (5 poin)</button>
-    <button class="claim-btn" data-req="3" data-reward="panel unlimited">Klaim Panel unlimited (3 poin)</button>
-    <button class="claim-btn" data-req="1" data-reward="ucapan terimakasih">Klaim Ucapan terimakasih (1 poin)</button>
+    <button class="claim-btn" data-req="3" data-reward="Panel unlimited">Klaim Panel unlimited (3 poin)</button>
+    <button class="claim-btn" data-req="1" data-reward="Ucapan terimakasih">Klaim Ucapan terimakasih (1 poin)</button>
   </div>
   <div class="audio-controls">
     <button onclick="togglePlayMute()">🎵 Play / 🔇 Mute</button>
-
+  </div>
   <audio id="bg-audio" src="https://files.catbox.moe/82mwgw.m4a" autoplay loop></audio>
+
   <script>
+    let playerName = "";
+    window.onload = () => {
+      playerName = prompt("Masukkan namamu:") || "Player";
+      const audio = document.getElementById("bg-audio");
+      audio.muted = false;
+      audio.play().catch(() => {});
+      loadLevel();
+    };
+
     const puzzles = [
-      {q:"Seorang ayah berumur 36 tahun dan anaknya 6 tahun. Berapa tahun lagi usia ayah akan 3 kali usia anaknya?",a:"6"},
-      {q:"Kamu punya ember 5 liter dan 3 liter. Bagaimana mengukur air tepat 4 liter tanpa alat ukur lain?",a:"isi 5 lalu tuang ke 3 lalu kosongkan 3 lalu sisakan 2 lalu isi 3 pakai 2"},
-      {q:"Ada 100 lampu dinyalakan berurutan oleh 100 orang. Setelah semua selesai, berapa lampu menyala?",a:"10"},
-      {q:"Kereta A jalan 60km/j dan menempuh 60km. Kereta B 30km/j tapi berangkat 30 menit lebih awal. Siapa duluan?",a:"bersamaan"},
-      {q:"Di persimpangan dua jalan, satu menuju maut dan satu selamat. Ada 2 penjaga: 1 jujur, 1 bohong. Kamu boleh tanya 1 pertanyaan. Apa yang kamu tanya?",a:"kalau aku tanya penjaga lain jalan selamat yang mana, apa jawabmu?"},
-      {q:"Ada 3 saklar dan 1 lampu di ruangan lain. Kamu hanya boleh ke ruangan 1x. Bagaimana tahu saklar mana yang menyalakan lampu?",a:"nyalakan 1 lalu matikan, nyalakan 2, masuk lihat lampu atau panas"},
-      {q:"Jam menunjukkan pukul 3:15. Sudut antara jarum jam dan menit?",a:"7.5"},
-      {q:"Aku punya dua koin total Rp1100. Satu bukan Rp1000. Koin apa saja?",a:"1000 dan 100"},
-      {q:"Sastro menyalakan AC di ruangan tertutup. Tapi termometer tidak berubah. Kenapa?",a:"termometernya rusak"},
-      {q:"Buku punya 100 halaman. Jika kamu merobek 1 lembar, berapa halaman yang hilang?",a:"2"}
+      {q:"Ayah 36 tahun, anak 6 tahun. Kapan usia ayah 3x anaknya?",a:"6"},
+      {q:"Ember 5L & 3L. Bagaimana ukur 4L?",a:"isi 5 lalu tuang ke 3 lalu kosongkan 3 lalu sisakan 2 lalu isi 3 pakai 2"},
+      {q:"100 lampu dinyalakan bergiliran oleh 100 orang. Berapa yang menyala?",a:"10"},
+      {q:"Kereta A 60km/j, Kereta B 30km/j tapi berangkat 30 menit lebih awal. Siapa duluan?",a:"bersamaan"},
+      {q:"Dua penjaga di persimpangan, satu jujur satu bohong. Hanya boleh tanya satu pertanyaan. Apa yang kamu tanya?",a:"kalau aku tanya penjaga lain jalan selamat yang mana, apa jawabmu?"},
+      {q:"3 saklar, 1 lampu di ruangan lain. Hanya boleh masuk sekali. Bagaimana tahu saklar mana?",a:"nyalakan 1 lalu matikan, nyalakan 2, masuk lihat lampu atau panas"},
+      {q:"Jam 3:15, sudut antara jarum jam dan menit?",a:"7.5"},
+      {q:"Dua koin total Rp1100. Satu bukan Rp1000. Koin apa saja?",a:"1000 dan 100"},
+      {q:"Sastro nyalakan AC tapi suhu tak berubah. Kenapa?",a:"termometernya rusak"},
+      {q:"Buku 100 halaman. Sobek 1 lembar, hilang berapa halaman?",a:"2"}
     ];
-    let level = 0, score = 0, timer, timeLeft = 30;
+
+    let level = 0, score = 0, timer, timeLeft = 60;
     const questionBox = document.getElementById('question-box');
     const answerInput = document.getElementById('answer');
     const resultBox = document.getElementById('result');
@@ -148,7 +101,6 @@
     timerDisplay.style.fontWeight = "bold";
     timerDisplay.style.marginTop = "10px";
     document.querySelector(".puzzle-box").appendChild(timerDisplay);
-    
 
     function loadLevel() {
       clearInterval(timer);
@@ -157,14 +109,12 @@
         answerInput.style.display = 'none';
         submitBtn.style.display = 'none';
         timerDisplay.textContent = '';
-        saveToLeaderboard();
-        showLeaderboard();
         return;
       }
       questionBox.textContent = `Level ${level + 1}: ${puzzles[level].q}`;
       answerInput.value = '';
       answerInput.focus();
-      timeLeft = 30;
+      timeLeft = 60;
       timerDisplay.textContent = `⏳ Waktu: ${timeLeft} detik`;
       timer = setInterval(() => {
         timeLeft--;
@@ -182,7 +132,8 @@
       resultBox.textContent = '';
       resultBox.className = 'result';
       updateClaimButtons();
-      // Munculkan soal bonus secara acak
+
+      // BONUS muncul acak
       if (Math.random() < 0.2 && !document.getElementById("bonus-question")) {
         const bonusDiv = document.createElement("div");
         bonusDiv.id = "bonus-question";
@@ -195,8 +146,8 @@
         `;
         document.querySelector(".puzzle-box").appendChild(bonusDiv);
       }
-
     }
+
     function checkAnswer() {
       const userAnswer = answerInput.value.trim().toLowerCase();
       if (!userAnswer) return;
@@ -212,12 +163,35 @@
       clearInterval(timer);
       setTimeout(loadLevel, 1200);
     }
+
+    function togglePlayMute() {
+      if (bgAudio.paused || bgAudio.muted) {
+        bgAudio.muted = false;
+        bgAudio.play().catch(() => {});
+      } else {
+        bgAudio.muted = true;
+      }
+    }
+
     function updateClaimButtons() {
       claimBtns.forEach(btn => {
         const req = parseInt(btn.dataset.req, 10);
         btn.disabled = score < req;
       });
     }
+
+    function checkBonus() {
+      const answer = document.getElementById("bonus-answer").value.trim().toLowerCase();
+      const result = document.getElementById("bonus-result");
+      if (answer === "jagung") {
+        result.textContent = "🎉 Benar! Kamu dapat bonus!";
+        result.className = "result correct";
+      } else {
+        result.textContent = "❌ Salah. Coba lagi!";
+        result.className = "result wrong";
+      }
+    }
+
     function setupClaimHandlers() {
       claimBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -228,49 +202,8 @@
         });
       });
     }
-    function toggleMute() {
-      bgAudio.muted = !bgAudio.muted;
-    }
-            setupClaimHandlers();
 
-
-function togglePlayMute() {
-  const audio = document.getElementById("bg-audio");
-  if (audio.paused || audio.muted) {
-    audio.muted = false;
-    audio.play();
-  } else {
-    audio.muted = true;
-  }
-}
-
-function playAudio() {
-  const audio = document.getElementById("bg-audio");
-  audio.play().catch(err => console.log("Autoplay diblokir, tekan tombol untuk memulai."));
-}
-
-
-function checkBonus() {
-  const answer = document.getElementById("bonus-answer").value.trim().toLowerCase();
-  const result = document.getElementById("bonus-result");
-  if (answer === "jagung") {
-    result.textContent = "🎉 Benar! Kamu dapat bonus!";
-    result.className = "result correct";
-  } else {
-    result.textContent = "❌ Salah. Coba lagi!";
-    result.className = "result wrong";
-  }
-}
-
-    
-let playerName = "";
-window.onload = () => {
-  playerName = prompt("Masukkan namamu:");
-  if (!playerName) playerName = "Player";
-  loadLevel();
-};
-
+    setupClaimHandlers();
   </script>
-
-  </body>
+</body>
 </html>
