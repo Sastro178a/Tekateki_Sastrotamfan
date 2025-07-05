@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Teka-Teki Logika Sastro Tamfan</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: url('https://files.catbox.moe/kcqqqw.png') center/cover fixed no-repeat;
+      background: url('https://files.catbox.moe/4ga9iq.png') center/cover fixed no-repeat;
+      backdrop-filter: blur(6px);
       margin: 0;
       padding: 1rem;
       display: flex;
@@ -68,150 +69,158 @@
       h1 { font-size: 1.2rem; }
       .info { flex-direction: column; align-items: center; gap: 5px; }
     }
+    .claim-btn:disabled {
+      background-color: #ccc !important;
+      color: #666 !important;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
-  <h1>Teka-Teki Logika Sastro Tamfan</h1>
-  <div class="info">
-    <span id="level-display">Level: 1/10</span>
-    <span id="score-display">Skor: 0</span>
-  </div>
-  <div class="puzzle-box">
-    <div class="question" id="question-box"></div>
-    <input type="text" id="answer" placeholder="Jawabanmu...">
-    <button id="submit-btn" onclick="checkAnswer()">Kirim Jawaban</button>
-    <div class="result" id="result"></div>
+  <div id="start-screen" style="text-align:center;padding:2rem;max-width:400px;margin:auto;">
+    <h1 style="color:white;">Teka-Teki Logika Sastro Tamfan</h1>
+    <input type="text" id="nameInput" placeholder="Masukkan namamu..." />
+    <button onclick="startGame()">Mulai Permainan</button>
   </div>
 
-  <div class="claim-section">
-    <h2>Tarik Hadiah Sesuai Poin</h2>
-    <button class="claim-btn" data-req="10" data-reward="Nokos indo">Klaim Nokos indo (10 poin)</button>
-    <button class="claim-btn" data-req="5" data-reward="Web payment">Klaim Web payment (5 poin)</button>
-    <button class="claim-btn" data-req="3" data-reward="Panel unlimited">Klaim Panel unlimited (3 poin)</button>
-    <button class="claim-btn" data-req="1" data-reward="Ucapan terimakasih">Klaim Ucapan terimakasih (1 poin)</button>
+  <div id="main-game" style="display:none;">
+    <h1>Teka-Teki Logika Sastro Tamfan</h1>
+    <div class="info">
+      <span id="level-display">Level: 1/10</span>
+      <span id="score-display">Skor: 0</span>
+    </div>
+    <div class="puzzle-box">
+      <div class="question" id="question-box"></div>
+      <input type="text" id="answer" placeholder="Jawabanmu...">
+      <button id="submit-btn" onclick="checkAnswer()">Kirim Jawaban</button>
+      <div class="result" id="result"></div>
+      <div id="timer-display" style="font-weight:bold;margin-top:10px;"></div>
+    </div>
+    <div class="claim-section">
+      <h2>Tarik Hadiah Sesuai Poin</h2>
+      <button class="claim-btn" data-req="10" data-reward="Nokos indo">Klaim Nokos indo (10 poin)</button>
+      <button class="claim-btn" data-req="5" data-reward="Web payment">Klaim Web payment (5 poin)</button>
+      <button class="claim-btn" data-req="3" data-reward="Panel unlimited">Klaim Panel unlimited (3 poin)</button>
+      <button class="claim-btn" data-req="1" data-reward="Ucapan terimakasih">Klaim Ucapan terimakasih (1 poin)</button>
+    </div>
+    <div class="audio-controls">
+      <button onclick="togglePlayMute()">🎵 Play / 🔇 Mute</button>
+    </div>
+    <audio id="bg-audio" src="https://files.catbox.moe/82mwgw.m4a" loop></audio>
   </div>
-
-  <div class="audio-controls">
-    <button onclick="togglePlayMute()">🎵 Play / 🔇 Mute</button>
-  </div>
-  <audio id="bg-audio" src="https://files.catbox.moe/82mwgw.m4a" autoplay loop></audio>
 
   <script>
     let playerName = "";
     let level = 0, score = 0, timer, timeLeft = 60;
-
-    const puzzles = [
-      {q:"Ayah 36 tahun, anak 6 tahun. Kapan usia ayah 3x anaknya?",a:"6"},
-      {q:"Ember 5L & 3L. Bagaimana ukur 4L?",a:"isi 5 lalu tuang ke 3 lalu kosongkan 3 lalu sisakan 2 lalu isi 3 pakai 2"},
-      {q:"100 lampu dinyalakan bergiliran oleh 100 orang. Berapa yang menyala?",a:"10"},
-      {q:"Kereta A 60km/j, Kereta B 30km/j tapi berangkat 30 menit lebih awal. Siapa duluan?",a:"bersamaan"},
-      {q:"Dua penjaga di persimpangan, satu jujur satu bohong. Apa yang kamu tanya?",a:"kalau aku tanya penjaga lain jalan selamat yang mana, apa jawabmu?"},
-      {q:"3 saklar, 1 lampu di ruangan lain. Hanya boleh masuk sekali. Bagaimana tahu saklar mana?",a:"nyalakan 1 lalu matikan, nyalakan 2, masuk lihat lampu atau panas"},
-      {q:"Jam 3:15, sudut antara jarum jam dan menit?",a:"7.5"},
-      {q:"Dua koin total Rp1100. Satu bukan Rp1000. Koin apa saja?",a:"1000 dan 100"},
-      {q:"Sastro nyalakan AC tapi suhu tak berubah. Kenapa?",a:"termometernya rusak"},
-      {q:"Buku 100 halaman. Sobek 1 lembar, hilang berapa halaman?",a:"2"}
+    let puzzles = [
+      {q:"Ayam jantan bertelur di atap. Jatuh ke mana?", a:"nga ada ayam jantan tidak bertelur"},
+      {q:"5 lilin menyala, 2 ditiup. Berapa sisa?", a:"5"},
+      {q:"Mobil di kiri jalan, belok kiri. Arah?", a:"kiri"},
+      {q:"4 anak, tiap anak 3 anak. Cucu?", a:"12"},
+      {q:"Semakin digali, makin besar. Apa?", a:"lubang"},
+      {q:"Baca halaman 35, balik 1 lembar. Sekarang?", a:"37"},
+      {q:"Muncul malam, hilang siang. Apa?", a:"bulan"},
+      {q:"Ibu punya 3 anak: Januari, Februari, ...?", a:"kamu"},
+      {q:"Apa yang nggak bisa masuk panci?", a:"tutup pancinya"},
+      {q:"Kalau dibagi, hilang. Apa?", a:"rahasia"}
     ];
 
-    const questionBox = document.getElementById('question-box');
-    const answerInput = document.getElementById('answer');
-    const resultBox = document.getElementById('result');
-    const levelDisplay = document.getElementById('level-display');
-    const scoreDisplay = document.getElementById('score-display');
-    const submitBtn = document.getElementById('submit-btn');
-    const claimBtns = document.querySelectorAll('.claim-btn');
-    const bgAudio = document.getElementById('bg-audio');
-    const timerDisplay = document.createElement("div");
-    timerDisplay.style.fontWeight = "bold";
-    timerDisplay.style.marginTop = "10px";
-    document.querySelector(".puzzle-box").appendChild(timerDisplay);
+    const shuffle = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    };
 
     function saveProgress() {
-      localStorage.setItem("teka_level", level);
-      localStorage.setItem("teka_score", score);
+      localStorage.setItem("gameData", JSON.stringify({
+        playerName, level, score, puzzles
+      }));
     }
 
     function loadProgress() {
-      const savedLevel = localStorage.getItem("teka_level");
-      const savedScore = localStorage.getItem("teka_score");
-      if (savedLevel !== null) level = parseInt(savedLevel);
-      if (savedScore !== null) score = parseInt(savedScore);
+      const data = JSON.parse(localStorage.getItem("gameData"));
+      if (data) {
+        playerName = data.playerName;
+        level = data.level;
+        score = data.score;
+        puzzles = data.puzzles;
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("main-game").style.display = "block";
+        loadLevel();
+        setupClaimHandlers();
+        const bgAudio = document.getElementById("bg-audio");
+        bgAudio.muted = false;
+        bgAudio.play().catch(() => {});
+      }
     }
 
-    window.onload = () => {
-      playerName = prompt("Masukkan namamu:") || "Player";
+    window.onload = loadProgress;
+
+    function startGame() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) {
+        alert("Nama tidak boleh kosong!");
+        return;
+      }
+      playerName = name;
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("main-game").style.display = "block";
+      shuffle(puzzles);
+      saveProgress();
+      loadLevel();
+      setupClaimHandlers();
+      const bgAudio = document.getElementById("bg-audio");
       bgAudio.muted = false;
       bgAudio.play().catch(() => {});
-      loadProgress();
-      loadLevel();
-    };
+    }
 
     function loadLevel() {
       clearInterval(timer);
       if (level >= puzzles.length) {
-        questionBox.textContent = `Permainan selesai! Skor akhir kamu: ${score}/${puzzles.length}`;
-        answerInput.style.display = 'none';
-        submitBtn.style.display = 'none';
-        timerDisplay.textContent = '';
+        document.getElementById('question-box').textContent = `Permainan selesai! Skor akhir kamu: ${score}/${puzzles.length}`;
+        document.getElementById('answer').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('timer-display').textContent = '';
+        localStorage.removeItem("gameData");
         return;
       }
-
-      questionBox.textContent = `Level ${level + 1}: ${puzzles[level].q}`;
-      answerInput.value = '';
-      answerInput.disabled = false;
-      submitBtn.disabled = false;
+      document.getElementById('question-box').textContent = `Level ${level + 1}: ${puzzles[level].q}`;
+      document.getElementById('answer').value = '';
+      document.getElementById('answer').disabled = false;
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('level-display').textContent = `Level: ${level + 1}/10`;
+      document.getElementById('score-display').textContent = `Skor: ${score}`;
+      document.getElementById('result').textContent = '';
+      document.getElementById('result').className = 'result';
+      updateClaimButtons();
       timeLeft = 60;
-      timerDisplay.textContent = `⏳ Waktu: ${timeLeft} detik`;
+      document.getElementById('timer-display').textContent = `⏳ Waktu: ${timeLeft} detik`;
       timer = setInterval(() => {
         timeLeft--;
-        timerDisplay.textContent = `⏳ Waktu: ${timeLeft} detik`;
+        document.getElementById('timer-display').textContent = `⏳ Waktu: ${timeLeft} detik`;
         if (timeLeft <= 0) {
           clearInterval(timer);
-          resultBox.textContent = `Waktu habis! Jawaban: ${puzzles[level].a}`;
-          resultBox.className = 'result wrong';
-          answerInput.disabled = true;
-          submitBtn.disabled = true;
+          document.getElementById('result').textContent = `Waktu habis! Jawaban: ${puzzles[level].a}`;
+          document.getElementById('answer').disabled = true;
+          document.getElementById('submit-btn').disabled = true;
           level++;
           saveProgress();
           setTimeout(loadLevel, 1500);
         }
       }, 1000);
-
-      levelDisplay.textContent = `Level: ${level + 1}/10`;
-      scoreDisplay.textContent = `Skor: ${score}`;
-      resultBox.textContent = '';
-      resultBox.className = 'result';
-      updateClaimButtons();
-
-      if (Math.random() < 0.2 && !document.getElementById("bonus-question")) {
-        const bonusDiv = document.createElement("div");
-        bonusDiv.id = "bonus-question";
-        bonusDiv.innerHTML = `
-          <h2>💡 BONUS SIAP?</h2>
-          <p><strong>Apa yang besar, berbulu lebat, dan berbiji?</strong></p>
-          <input type="text" id="bonus-answer" placeholder="Jawaban bonus...">
-          <button onclick="checkBonus()">Cek Bonus</button>
-          <div id="bonus-result" class="result"></div>
-        `;
-        document.querySelector(".puzzle-box").appendChild(bonusDiv);
-      }
     }
 
     function checkAnswer() {
-      const userAnswer = answerInput.value.trim().toLowerCase();
-      if (!userAnswer) return;
-      answerInput.disabled = true;
-      submitBtn.disabled = true;
-
-      if (userAnswer === puzzles[level].a.toLowerCase()) {
+      const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+      const correct = puzzles[level].a.toLowerCase();
+      const isCorrect = correct.split(" ").some(word => userAnswer.includes(word)) || userAnswer === correct;
+      if (isCorrect) {
         score++;
-        resultBox.textContent = 'Benar!';
-        resultBox.className = 'result correct';
+        document.getElementById('result').textContent = 'Benar!';
       } else {
-        resultBox.textContent = `Salah. Jawaban yang benar: ${puzzles[level].a}`;
-        resultBox.className = 'result wrong';
+        document.getElementById('result').textContent = `Salah. Jawaban yang benar: ${puzzles[level].a}`;
       }
-
       clearInterval(timer);
       level++;
       saveProgress();
@@ -219,45 +228,33 @@
     }
 
     function togglePlayMute() {
-      if (bgAudio.paused || bgAudio.muted) {
-        bgAudio.muted = false;
-        bgAudio.play().catch(() => {});
-      } else {
-        bgAudio.muted = true;
-      }
+      const bgAudio = document.getElementById('bg-audio');
+      bgAudio.muted = !bgAudio.muted;
     }
 
     function updateClaimButtons() {
+      const claimBtns = document.querySelectorAll('.claim-btn');
       claimBtns.forEach(btn => {
         const req = parseInt(btn.dataset.req, 10);
         btn.disabled = score < req;
       });
     }
 
-    function checkBonus() {
-      const answer = document.getElementById("bonus-answer").value.trim().toLowerCase();
-      const result = document.getElementById("bonus-result");
-      if (answer === "jagung") {
-        result.textContent = "🎉 Benar! Kamu dapat bonus!";
-        result.className = "result correct";
-      } else {
-        result.textContent = "❌ Salah. Coba lagi!";
-        result.className = "result wrong";
-      }
-    }
-
     function setupClaimHandlers() {
+      const claimBtns = document.querySelectorAll('.claim-btn');
       claimBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          if (btn.disabled) return;
+          const req = parseInt(btn.dataset.req, 10);
+          if (score < req) {
+            alert("Poin kamu belum cukup untuk klaim hadiah ini.");
+            return;
+          }
           const reward = btn.dataset.reward;
           const waLink = `https://wa.me/6283863400384?text=${encodeURIComponent(`Halo, saya ${playerName}. Saya mendapat poin ${score}. Saya ingin ${reward}.`)}`;
           window.open(waLink, '_blank');
         });
       });
     }
-
-    setupClaimHandlers();
   </script>
 </body>
 </html>
